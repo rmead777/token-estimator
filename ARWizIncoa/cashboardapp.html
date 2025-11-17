@@ -1,0 +1,2960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INCOA Cash Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 50%, #3d6b8f 100%);
+            padding: 20px;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            background: white;
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-bottom: 25px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .header-left h1 {
+            color: #1a3a52;
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .header-left .subtitle {
+            color: #64748b;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        /* COVENANT WIDGETS - TWO SIDE BY SIDE */
+        .covenant-widgets {
+            display: flex;
+            gap: 15px;
+        }
+
+        .covenant-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 18px 24px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            min-width: 200px;
+        }
+
+        .covenant-widget.warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+        }
+
+        .covenant-widget.danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #b91c1c;
+            animation: pulse-subtle 3s infinite;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(185, 28, 28, 0.2); }
+            50% { transform: scale(1.01); box-shadow: 0 4px 16px rgba(185, 28, 28, 0.3); }
+        }
+
+        .covenant-label {
+            font-size: 0.75em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        .covenant-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #1a3a52;
+        }
+
+        .covenant-widget.warning .covenant-value {
+            color: #b45309;
+        }
+
+        .covenant-widget.danger .covenant-value {
+            color: #b91c1c;
+        }
+
+        .covenant-status {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .covenant-status.safe {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .covenant-status.warning {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .covenant-status.danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* UPLOAD SECTION */
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+            margin-bottom: 25px;
+            border: 2px dashed #cbd5e1;
+        }
+
+        .upload-section h3 {
+            color: #1a3a52;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .upload-card {
+            background: #f8fafc;
+            padding: 22px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            border-color: #2d5a7b;
+            box-shadow: 0 4px 12px rgba(45, 90, 123, 0.15);
+        }
+
+        .upload-card h4 {
+            color: #1a3a52;
+            margin-bottom: 15px;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 14px;
+            background: #2d5a7b;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .file-input-label:hover {
+            background: #3d6b8f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 90, 123, 0.3);
+        }
+
+        .file-status {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            text-align: center;
+            display: none;
+        }
+
+        .file-status.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .file-status.error {
+            display: block;
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .btn-primary {
+            background: #2d5a7b;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #3d6b8f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 90, 123, 0.3);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* DASHBOARD METRICS */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-left: 4px solid #2d5a7b;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
+        .metric-card.positive {
+            border-left-color: #0f766e;
+        }
+
+        .metric-card.negative {
+            border-left-color: #b91c1c;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #1a3a52;
+            margin-bottom: 8px;
+            line-height: 1.1;
+        }
+
+        .metric-value.positive {
+            color: #0f766e;
+        }
+
+        .metric-value.negative {
+            color: #b91c1c;
+        }
+
+        .metric-subtitle {
+            font-size: 0.85em;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* PRIORITY BADGES */
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .priority-tier-0 {
+            background: #b91c1c;
+            color: white;
+        }
+
+        .priority-tier-1 {
+            background: #ea580c;
+            color: white;
+        }
+
+        .priority-tier-2 {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .priority-tier-3 {
+            background: #0f766e;
+            color: white;
+        }
+
+        .priority-tier-4 {
+            background: #64748b;
+            color: white;
+        }
+
+        /* WEEK GROUPS */
+        .payment-schedule {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .payment-schedule h3 {
+            color: #1a3a52;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        .week-group {
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .week-group:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .week-header {
+            background: linear-gradient(135deg, #2d5a7b 0%, #3d6b8f 100%);
+            color: white;
+            padding: 16px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .week-header:hover {
+            background: linear-gradient(135deg, #3d6b8f 0%, #4d7b9f 100%);
+        }
+
+        .week-header.ar-header {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        }
+
+        .week-header.ar-header:hover {
+            background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
+        }
+
+        .week-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .week-number {
+            font-size: 1.2em;
+            font-weight: 700;
+            min-width: 80px;
+        }
+
+        .week-summary {
+            font-size: 0.9em;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .week-total {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin-right: 15px;
+        }
+
+        .expand-icon {
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+
+        .week-group.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .week-details {
+            display: none;
+            background: #f8fafc;
+        }
+
+        .week-group.expanded .week-details {
+            display: block;
+        }
+
+        .week-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .week-details th {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            border-bottom: 2px solid #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .week-details td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9em;
+        }
+
+        .week-details tr:hover {
+            background: white;
+        }
+
+        .week-details tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* CASH FLOW TABLE */
+        .cash-flow-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .cash-flow-table th {
+            background: #2d5a7b;
+            color: white;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .cash-flow-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9em;
+        }
+
+        .cash-flow-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .cash-flow-table tr.warning {
+            background: #fef3c7;
+        }
+
+        .cash-flow-table tr.danger {
+            background: #fee2e2;
+        }
+
+        .net-positive {
+            color: #0f766e;
+            font-weight: 600;
+        }
+
+        .net-negative {
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        /* CHARTS */
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .chart-container h3 {
+            color: #1a3a52;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        /* DATA SOURCE INDICATOR */
+        .data-source-indicator {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .data-source-indicator.real-data {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 0;
+            background: white;
+            padding: 20px 20px 0;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .tab:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .tab.active {
+            background: #2d5a7b;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 0 12px 12px 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* INSIGHTS BOX */
+        .insights-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bae6fd;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 25px;
+        }
+
+        .insights-box h4 {
+            color: #0c4a6e;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .insights-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insights-box li {
+            color: #0369a1;
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .insights-box li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            font-weight: 700;
+        }
+
+        /* EXPORT BUTTONS */
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-export {
+            padding: 10px 20px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-export:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        /* ==========================================
+           MOBILE RESPONSIVE DESIGN
+           ========================================== */
+        
+        /* Tablet landscape and smaller */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Tablet portrait and smaller */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+            
+            /* HEADER */
+            .header {
+                padding: 20px;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .header-left h1 {
+                font-size: 1.6em;
+            }
+            
+            .header-left .subtitle {
+                font-size: 0.9em;
+            }
+            
+            /* COVENANT WIDGETS */
+            .covenant-widgets {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .covenant-widget {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            /* METRICS DASHBOARD */
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .metric-card {
+                padding: 20px;
+            }
+            
+            .metric-value {
+                font-size: 1.6em;
+            }
+            
+            /* TABS */
+            .tabs {
+                flex-wrap: wrap;
+                padding: 15px 15px 0;
+                gap: 5px;
+            }
+            
+            .tab {
+                padding: 10px 16px;
+                font-size: 0.85em;
+                flex: 1 1 auto;
+                min-width: 100px;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+            
+            /* UPLOAD SECTION */
+            .upload-section {
+                padding: 20px;
+            }
+            
+            .upload-section h3 {
+                font-size: 1.1em;
+            }
+            
+            /* TABLES */
+            .week-details table {
+                font-size: 0.8em;
+            }
+            
+            .week-details th,
+            .week-details td {
+                padding: 8px 10px;
+            }
+            
+            .cash-flow-table {
+                font-size: 0.8em;
+            }
+            
+            .cash-flow-table th,
+            .cash-flow-table td {
+                padding: 10px 8px;
+            }
+            
+            /* WEEK GROUPS */
+            .week-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+            
+            .week-header-left {
+                gap: 12px;
+            }
+            
+            .week-number {
+                font-size: 1.1em;
+                min-width: unset;
+            }
+            
+            .week-summary {
+                font-size: 0.85em;
+            }
+            
+            .week-total {
+                font-size: 1em;
+            }
+            
+            /* CHARTS */
+            .chart-container {
+                padding: 20px;
+            }
+            
+            .chart-container h3 {
+                font-size: 1.2em;
+            }
+            
+            /* INSIGHTS */
+            .insights-box {
+                padding: 16px 20px;
+            }
+            
+            .insights-box h4 {
+                font-size: 1em;
+            }
+            
+            .insights-box li {
+                font-size: 0.9em;
+            }
+            
+            /* BUTTONS */
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+            
+            .export-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-export {
+                width: 100%;
+            }
+            
+            /* FILTERS */
+            select {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            #vendorTotal,
+            #customerTotal {
+                display: block;
+                margin-left: 0 !important;
+                margin-top: 10px;
+            }
+        }
+        
+        /* Mobile phones */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            /* HEADER */
+            .header {
+                padding: 15px;
+            }
+            
+            .header-left h1 {
+                font-size: 1.4em;
+                margin-bottom: 5px;
+            }
+            
+            .header-left .subtitle {
+                font-size: 0.85em;
+            }
+            
+            /* Upload button in header */
+            .header-top button {
+                padding: 10px 18px;
+                font-size: 0.9em;
+            }
+            
+            /* COVENANT WIDGETS */
+            .covenant-widget {
+                padding: 14px 18px;
+            }
+            
+            .covenant-label {
+                font-size: 0.7em;
+            }
+            
+            .covenant-value {
+                font-size: 1.4em;
+            }
+            
+            .covenant-status {
+                font-size: 0.7em;
+                padding: 4px 8px;
+            }
+            
+            /* METRICS */
+            .metric-card {
+                padding: 16px;
+            }
+            
+            .metric-label {
+                font-size: 0.8em;
+            }
+            
+            .metric-value {
+                font-size: 1.4em;
+            }
+            
+            .metric-subtitle {
+                font-size: 0.8em;
+            }
+            
+            /* TABS */
+            .tabs {
+                padding: 10px 10px 0;
+            }
+            
+            .tab {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                min-width: 80px;
+            }
+            
+            .tab-content {
+                padding: 15px;
+                border-radius: 0 8px 8px 8px;
+            }
+            
+            /* UPLOAD SECTION */
+            .upload-section {
+                padding: 15px;
+            }
+            
+            .upload-section h3 {
+                font-size: 1em;
+                margin-bottom: 15px;
+            }
+            
+            .upload-card {
+                padding: 16px;
+            }
+            
+            .upload-card h4 {
+                font-size: 0.95em;
+            }
+            
+            .file-input-label {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+            
+            /* TABLES - Make scrollable horizontally */
+            .week-details {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .week-details table {
+                min-width: 600px;
+                font-size: 0.75em;
+            }
+            
+            .week-details th,
+            .week-details td {
+                padding: 6px 8px;
+                white-space: nowrap;
+            }
+            
+            /* CASH FLOW TABLE - Make scrollable horizontally */
+            #cashFlowTableContainer {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+            
+            .cash-flow-table {
+                min-width: 900px;
+                font-size: 0.7em;
+            }
+            
+            .cash-flow-table th,
+            .cash-flow-table td {
+                padding: 6px 4px;
+                white-space: nowrap;
+            }
+            
+            /* INSIGHTS TAB - Force single column */
+            #insights h2 {
+                font-size: 1.3em !important;
+            }
+            
+            #insights .insight-card h3 {
+                font-size: 1.1em !important;
+            }
+            
+            #insights .insight-card h4 {
+                font-size: 1em !important;
+            }
+            
+            #insights .insight-card > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+            
+            #insights .insight-card > div[style*="display: grid"] {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* CASH FLOW TABLE - Make container scrollable */
+            #cashFlowTableContainer {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+            
+            .cash-flow-table {
+                min-width: 900px;
+                font-size: 0.7em;
+            }
+            
+            .cash-flow-table th,
+            .cash-flow-table td {
+                padding: 6px 4px;
+                white-space: nowrap;
+                font-size: 0.85em;
+            }
+            
+            /* Add scroll indicator */
+            #cashFlowTableContainer::after {
+                content: "← Scroll to see all columns →";
+                display: block;
+                text-align: center;
+                color: #94a3b8;
+                font-size: 0.7em;
+                padding: 8px;
+                font-style: italic;
+                background: #f8fafc;
+                margin: 8px -15px -8px -15px;
+                border-top: 1px solid #e2e8f0;
+            }
+            
+            /* CASH FLOW TABLE - Make container scrollable */
+            #cashFlowTableContainer {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+            
+            .cash-flow-table {
+                min-width: 900px;
+                font-size: 0.75em;
+            }
+            
+            .cash-flow-table th,
+            .cash-flow-table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+            
+            /* INSIGHTS TAB - Force single column */
+            .insight-card > div[style*="grid"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+            
+            .insight-card h3 {
+                font-size: 1.1em !important;
+            }
+            
+            .insight-card h4 {
+                font-size: 1em !important;
+            }
+            
+            /* WEEK GROUPS */
+            .week-header {
+                padding: 10px 12px;
+            }
+            
+            .week-header-left {
+                flex-direction: column;
+                gap: 5px;
+                align-items: flex-start;
+            }
+            
+            .week-number {
+                font-size: 1em;
+            }
+            
+            .week-summary {
+                font-size: 0.8em;
+            }
+            
+            .week-total {
+                font-size: 0.95em;
+                margin-right: 10px;
+            }
+            
+            .expand-icon {
+                font-size: 1em;
+            }
+            
+            /* PAYMENT SCHEDULE */
+            .payment-schedule {
+                padding: 15px;
+            }
+            
+            .payment-schedule h3 {
+                font-size: 1.2em;
+                margin-bottom: 15px;
+            }
+            
+            /* CHARTS - Mobile optimized */
+            .chart-container {
+                padding: 15px;
+                overflow: hidden;
+                margin-bottom: 20px;
+            }
+            
+            .chart-container h3 {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+            
+            .chart-container canvas {
+                max-width: 100% !important;
+                height: auto !important;
+                width: 100% !important;
+            }
+            
+            /* INSIGHTS SECTION */
+            .insights-box {
+                padding: 12px 15px;
+            }
+            
+            .insights-box h4 {
+                font-size: 0.95em;
+                margin-bottom: 10px;
+            }
+            
+            .insights-box li {
+                font-size: 0.85em;
+                padding: 6px 0;
+                padding-left: 20px;
+            }
+            
+            /* INSIGHTS TAB - Force single column layouts */
+            #insights h2 {
+                font-size: 1.3em !important;
+            }
+            
+            #insights .insight-card {
+                margin-bottom: 20px !important;
+            }
+            
+            #insights .insight-card h3 {
+                font-size: 1.05em !important;
+                word-wrap: break-word;
+            }
+            
+            #insights .insight-card h4 {
+                font-size: 0.95em !important;
+            }
+            
+            /* Force all grid layouts to single column */
+            #insights .insight-card > div[style*="grid"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+            
+            #insights .insight-card > div > div {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Fix padding on insight content boxes */
+            #insights .insight-card div[style*="padding: 20px"] {
+                padding: 15px !important;
+            }
+            
+            #insights .insight-card div[style*="padding: 25px"] {
+                padding: 18px !important;
+            }
+            
+            /* BUTTONS */
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.85em;
+            }
+            
+            .btn-primary {
+                width: 100%;
+            }
+            
+            /* PRIORITY BADGES */
+            .priority-badge {
+                font-size: 0.7em;
+                padding: 4px 10px;
+            }
+            
+            /* DATA SOURCE INDICATOR */
+            .data-source-indicator {
+                font-size: 0.85em;
+                padding: 10px 18px;
+            }
+            
+            /* FILE STATUS */
+            .file-status {
+                font-size: 0.8em;
+                padding: 8px;
+            }
+        }
+        
+        /* Very small phones */
+        @media (max-width: 360px) {
+            .header-left h1 {
+                font-size: 1.2em;
+            }
+            
+            .metric-value {
+                font-size: 1.2em;
+            }
+            
+            .tab {
+                font-size: 0.75em;
+                padding: 6px 10px;
+                min-width: 70px;
+            }
+            
+            .covenant-value {
+                font-size: 1.2em;
+            }
+        }
+        
+        /* TOUCH-FRIENDLY IMPROVEMENTS */
+        @media (hover: none) and (pointer: coarse) {
+            /* Larger touch targets */
+            .week-header {
+                min-height: 60px;
+            }
+            
+            .tab {
+                min-height: 44px;
+            }
+            
+            .btn,
+            .file-input-label {
+                min-height: 44px;
+            }
+            
+            /* Disable hover effects on touch devices */
+            .week-header:hover,
+            .metric-card:hover,
+            .upload-card:hover,
+            .tab:hover,
+            .btn:hover,
+            .file-input-label:hover {
+                transform: none;
+            }
+        }
+        
+        /* LANDSCAPE ORIENTATION */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .header-top {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .covenant-widgets {
+                flex-direction: row;
+            }
+            
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* PRINT STYLES */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .header-top button,
+            .tabs,
+            .export-buttons,
+            .upload-section {
+                display: none;
+            }
+            
+            .tab-content {
+                display: block !important;
+                page-break-after: always;
+            }
+            
+            .chart-container {
+                page-break-inside: avoid;
+            }
+            
+            .week-group {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-top">
+                <div class="header-left">
+                    <h1>INCOA Performance Minerals</h1>
+                    <div class="subtitle">13-Week Cash Flow Management System</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <input type="file" id="unifiedFileInput" accept=".xlsx,.xls" onchange="handleUnifiedUpload(event)" style="display: none;">
+                    <button onclick="document.getElementById('unifiedFileInput').click()" style="padding: 12px 24px; background: #2d5a7b; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1em; transition: all 0.3s ease;">
+                        📊 Upload Excel
+                    </button>
+                    <div class="covenant-widgets">
+                        <div class="covenant-widget" id="minCashWidget">
+                            <div class="covenant-label">Projected Min Cash</div>
+                            <div class="covenant-value" id="minCashValue">$0</div>
+                            <div class="covenant-status safe" id="minCashStatus">
+                                ✓ SAFE
+                            </div>
+                        </div>
+                        <div class="covenant-widget" id="endCashWidget">
+                            <div class="covenant-label">Projected End Cash</div>
+                            <div class="covenant-value" id="endCashValue">$0</div>
+                            <div class="covenant-status safe" id="endCashStatus">
+                                Week 13
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="dataSourceIndicator" class="data-source-indicator" style="margin-top: 15px;">
+                📊 Upload Excel workbook to begin
+            </div>
+            <div id="unifiedFileStatus" class="file-status" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
+            <button class="tab" onclick="switchTab('cashFlow')">💰 Cash Flow</button>
+            <button class="tab" onclick="switchTab('paymentSchedule')">📅 AP Schedule</button>
+            <button class="tab" onclick="switchTab('collectionSchedule')">📥 AR Schedule</button>
+            <button class="tab" onclick="switchTab('insights')">💡 Insights</button>
+        </div>
+
+        <!-- TAB: OVERVIEW -->
+        <div id="overview" class="tab-content active">
+            <!-- Key Insights -->
+            <div class="insights-box" id="insightsBox" style="display: none;">
+                <h4>💡 Key Insights</h4>
+                <ul id="insightsList"></ul>
+            </div>
+
+            <!-- Metrics -->
+            <div class="dashboard">
+                <div class="metric-card">
+                    <div class="metric-label">Current Cash Position</div>
+                    <div class="metric-value" id="currentCash">$0</div>
+                    <div class="metric-subtitle">Week 1 Opening</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Projected Minimum Cash</div>
+                    <div class="metric-value" id="minCash">$0</div>
+                    <div class="metric-subtitle" id="minCashWeek">Lowest point in 13 weeks</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Projected End Cash</div>
+                    <div class="metric-value" id="endingCash">$0</div>
+                    <div class="metric-subtitle" id="covenantBuffer">Week 13 Ending</div>
+                </div>
+
+                <div class="metric-card positive">
+                    <div class="metric-label">13-Week Inflows</div>
+                    <div class="metric-value positive" id="totalInflows">$0</div>
+                    <div class="metric-subtitle">Total cash in</div>
+                </div>
+
+                <div class="metric-card negative">
+                    <div class="metric-label">13-Week Outflows</div>
+                    <div class="metric-value negative" id="totalOutflows">$0</div>
+                    <div class="metric-subtitle">Total cash out</div>
+                </div>
+
+                <div class="metric-card" id="netCashCard">
+                    <div class="metric-label">Net Cash Flow (13 Weeks)</div>
+                    <div class="metric-value" id="netCashFlow">$0</div>
+                    <div class="metric-subtitle">Inflows - Outflows</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-container">
+                <h3>Cumulative Cash Position</h3>
+                <canvas id="cumulativeCashChart" width="400" height="100"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3>Weekly Net Cash Flow</h3>
+                <canvas id="weeklyNetFlowChart" width="400" height="100"></canvas>
+            </div>
+
+            <!-- Export Options -->
+            <div class="export-buttons">
+                <button class="btn-export" onclick="exportToExcel()">📊 Export to Excel</button>
+                <button class="btn-export" onclick="printDashboard()">🖨️ Print Dashboard</button>
+            </div>
+        </div>
+
+        <!-- TAB: CASH FLOW -->
+        <div id="cashFlow" class="tab-content">
+            <div class="payment-schedule">
+                <h3>13-Week Cash Flow Projection</h3>
+                <div id="cashFlowTableContainer">
+                    <p style="text-align: center; color: #64748b; padding: 40px;">
+                        Upload AR & AP files to see projection
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: PAYMENT SCHEDULE -->
+        <div id="paymentSchedule" class="tab-content">
+            <div class="payment-schedule">
+                <h3>AP Payment Schedule by Week</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; margin-right: 10px;">Filter by Vendor:</label>
+                    <select id="vendorFilter" onchange="filterVendor()" style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; min-width: 200px;">
+                        <option value="">All Vendors</option>
+                    </select>
+                    <span id="vendorTotal" style="margin-left: 20px; font-weight: 600; color: #b91c1c;"></span>
+                </div>
+                <div id="paymentScheduleContainer">
+                    <p style="text-align: center; color: #64748b; padding: 40px;">
+                        Upload AP file to see payment schedule
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: COLLECTION SCHEDULE -->
+        <div id="collectionSchedule" class="tab-content">
+            <div class="payment-schedule">
+                <h3>AR Collection Schedule by Week</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; margin-right: 10px;">Filter by Customer:</label>
+                    <select id="customerFilter" onchange="filterCustomer()" style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; min-width: 200px;">
+                        <option value="">All Customers</option>
+                    </select>
+                    <span id="customerTotal" style="margin-left: 20px; font-weight: 600; color: #0f766e;"></span>
+                </div>
+                <div id="collectionScheduleContainer">
+                    <p style="text-align: center; color: #64748b; padding: 40px;">
+                        Upload AR file to see collection schedule
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: INSIGHTS -->
+        <div id="insights" class="tab-content">
+            <div style="max-width: 1400px; margin: 0 auto;">
+                <h2 style="color: #1a3a52; margin-bottom: 30px; font-size: 2em;">💡 Strategic Insights & Key Milestones</h2>
+                
+                <!-- Key Deliverables Section -->
+                <div class="insight-card" style="margin-bottom: 30px;">
+                    <h3 style="color: #b91c1c; margin-bottom: 20px; font-size: 1.4em; border-bottom: 3px solid #b91c1c; padding-bottom: 10px;">
+                        🚨 CRITICAL COMPLIANCE DATES
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div style="background: #fef2f2; border-left: 4px solid #b91c1c; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #b91c1c; font-size: 1.1em; margin-bottom: 8px;">📅 November 5, 2025</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">First Monthly 90-Day Liquidity Forecast Due</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Requirement:</strong> Submit to Orion using prescribed "Exhibit III" format covering Nov 1 - Jan 31, 2026. 
+                                Must show positive liquidity at EVERY POINT in 90-day window.
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fef2f2; border-left: 4px solid #b91c1c; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #b91c1c; font-size: 1.1em; margin-bottom: 8px;">📊 Bi-Weekly (Ongoing)</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">Cash Reporting to Orion</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Requirement:</strong> All account balances, CFO certified. Required while cash < $2M. 
+                                Duration through Phase 1 Completion OR December 31, 2026 (whichever later).
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #b45309; font-size: 1.1em; margin-bottom: 8px;">💰 December 31, 2025</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">Matt Day Funding Bonus Deadline</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Incentive:</strong> $4.9M funding by this date receives FULL bonus shares (15,250 Class D per $1M). 
+                                After Dec 31: reduced to 11,400 Class D per $1M (25% haircut).
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #b45309; font-size: 1.1em; margin-bottom: 8px;">🎯 June 30, 2026</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">Phase 1 Completion Deadline</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Targets:</strong> $2.3M/month revenue × 3 consecutive months + L3M positive EBITDA. 
+                                Required for covenant relief and Phase II capital access.
+                            </div>
+                        </div>
+                        
+                        <div style="background: #dcfce7; border-left: 4px solid #166534; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #166534; font-size: 1.1em; margin-bottom: 8px;">📋 Mid-November 2025</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">Independent Engineer Engagement</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Status:</strong> Required per 4th Amendment. Must provide monthly reports on operational progress, 
+                                compliance, and capex deployment. Target: engagement by mid-November.
+                            </div>
+                        </div>
+                        
+                        <div style="background: #dcfce7; border-left: 4px solid #166534; padding: 20px; border-radius: 8px;">
+                            <div style="font-weight: 700; color: #166534; font-size: 1.1em; margin-bottom: 8px;">💵 February 28, 2026</div>
+                            <div style="color: #64748b; margin-bottom: 12px;">Matt Day Final Funding Deadline</div>
+                            <div style="background: white; padding: 12px; border-radius: 6px; font-size: 0.9em;">
+                                <strong>Decision Point:</strong> Final deadline for $4.9M pro-rata investment. 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lintech Partnership -->
+                <div class="insight-card" style="margin-bottom: 30px;">
+                    <h3 style="color: #0f766e; margin-bottom: 20px; font-size: 1.4em; border-bottom: 3px solid #0f766e; padding-bottom: 10px;">
+                        📊 LINTECH PARTNERSHIP IMPACT
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <h4 style="color: #1a3a52; margin-bottom: 15px; font-size: 1.2em;">Partnership Status: OPERATIONAL ✅</h4>
+                            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                                <div style="font-weight: 600; color: #0f766e; margin-bottom: 10px;">Key Developments:</div>
+                                <ul style="color: #64748b; line-height: 1.8; margin-left: 20px;">
+                                    <li><strong>Distribution partnership:</strong> Lintech manages customer-facing commercial activity</li>
+                                    <li><strong>Operational synergies:</strong> Leveraging Lintech's 40-year distribution network</li>
+                                    <li><strong>Market expansion:</strong> Broader reach and faster response times to customers</li>
+                                    <li><strong>Strategic focus:</strong> INCOA focuses on production excellence and quality</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="background: #f0fdfa; padding: 20px; border-radius: 8px;">
+                                <div style="font-weight: 600; color: #0f766e; margin-bottom: 10px;">Financial Impact:</div>
+                                <ul style="color: #64748b; line-height: 1.8; margin-left: 20px;">
+                                    <li><strong>2026 EBITDA improvement:</strong> +$4.0M projected</li>
+                                    <li><strong>Cash flow differential:</strong> $3.9M better than without Lintech</li>
+                                    <li><strong>Feb 2026 minimum cash:</strong> $2.5M (vs $1.1M without partnership)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 style="color: #1a3a52; margin-bottom: 15px; font-size: 1.2em;">Customer Wins & Pipeline</h4>
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #0f766e;">
+                                <div style="font-weight: 700; color: #1a3a52; margin-bottom: 5px;">✅ The Wright Group</div>
+                                <div style="color: #64748b; font-size: 0.95em;"><strong>Five-year exclusive agreement</strong> signed for food/pharma segment</div>
+                            </div>
+                            
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #0f766e;">
+                                <div style="font-weight: 700; color: #1a3a52; margin-bottom: 5px;">🔄 NSG</div>
+                                <div style="color: #64748b; font-size: 0.95em;">Transitioning inventory from previous supplier to INCOA</div>
+                            </div>
+                            
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 700; color: #1a3a52; margin-bottom: 5px;">⏳ Westlake Chemical</div>
+                                <div style="color: #64748b; font-size: 0.95em;">Q4 trials scheduled (3,000-4,000 tons/year potential)</div>
+                            </div>
+                            
+                            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 700; color: #1a3a52; margin-bottom: 5px;">⏳ Vitro STARFIRE</div>
+                                <div style="color: #64748b; font-size: 0.95em;">Project rescheduled to Q4 pending supply reliability improvements</div>
+                            </div>
+                            
+                            <div style="background: #dcfce7; padding: 15px; border-radius: 8px; border-left: 3px solid #166534;">
+                                <div style="font-weight: 700; color: #166534; margin-bottom: 5px;">✅ Masonite</div>
+                                <div style="color: #64748b; font-size: 0.95em;">Resumed steady ordering after Q2 production delays</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 1 Target -->
+                <div class="insight-card" style="margin-bottom: 30px;">
+                    <h3 style="color: #2d5a7b; margin-bottom: 20px; font-size: 1.4em; border-bottom: 3px solid #2d5a7b; padding-bottom: 10px;">
+                        🎯 PHASE 1 COMPLETION TARGET
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 25px; border-radius: 12px; border: 2px solid #cbd5e1;">
+                            <div style="font-size: 0.85em; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Current Production</div>
+                            <div style="font-size: 2.5em; font-weight: 800; color: #b91c1c; margin-bottom: 10px;">7.5-9K</div>
+                            <div style="color: #64748b; font-size: 0.9em;">tons/month (volatile)</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 25px; border-radius: 12px; border: 2px solid #f59e0b;">
+                            <div style="font-size: 0.85em; color: #78350f; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Phase 1 Target</div>
+                            <div style="font-size: 2.5em; font-weight: 800; color: #b45309; margin-bottom: 10px;">16.5K</div>
+                            <div style="color: #78350f; font-size: 0.9em;">tons/month sustained</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); padding: 25px; border-radius: 12px; border: 2px solid #dc2626;">
+                            <div style="font-size: 0.85em; color: #7f1d1d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 600;">Gap to Close</div>
+                            <div style="font-size: 2.5em; font-weight: 800; color: #dc2626; margin-bottom: 10px;">7-9K</div>
+                            <div style="color: #7f1d1d; font-size: 0.9em;">Must DOUBLE output</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                        <div>
+                            <h4 style="color: #1a3a52; margin-bottom: 15px; font-size: 1.2em;">Operational Fixes Required</h4>
+                            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">✅ Server Reliability</span>
+                                        <span style="background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">COMPLETED</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">New server installed August 2025 - significantly improved uptime</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">🔄 K-Tron Feeders</span>
+                                        <span style="background: #fef3c7; color: #b45309; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">IN PROGRESS</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">$500K replacement ordered - largest downtime source, 6-month lead time (April 2026)</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">🔄 Critical Spares</span>
+                                        <span style="background: #fef3c7; color: #b45309; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">IN PROGRESS</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">$700K inventory build ordered - 4-month lead time, reduces extended downtime events</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">🔄 Sand Plant Debottlenecking</span>
+                                        <span style="background: #fef3c7; color: #b45309; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">UNDERWAY</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">$500K Christian Pfeiffer consultation project ongoing</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">⏸️ Silo Capacity</span>
+                                        <span style="background: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">ON HOLD</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">$2M project pending equipment financing - currently using railcars as buffer</div>
+                                </div>
+                                
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">✅ Automation System</span>
+                                        <span style="background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 6px; font-size: 0.85em; font-weight: 600;">COMPLETED</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">Ignition system completed August 2025 - real-time monitoring operational</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 style="color: #1a3a52; margin-bottom: 15px; font-size: 1.2em;">Revenue Requirements</h4>
+                            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                                <div style="font-weight: 600; color: #1a3a52; margin-bottom: 12px;">Phase 1 Hurdles (per 4th Amendment):</div>
+                                <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #dc2626;">
+                                    <div style="font-weight: 700; color: #dc2626; margin-bottom: 5px;">Revenue Target</div>
+                                    <div style="color: #64748b; font-size: 0.95em;">$2.3M/month sustained over 3 consecutive months</div>
+                                    <div style="color: #64748b; font-size: 0.85em; margin-top: 5px; font-style: italic;">Current: ~$1.4-$1.8M/month → Need +$500K-$900K/month</div>
+                                </div>
+                                <div style="background: #dcfce7; padding: 15px; border-radius: 8px; border-left: 4px solid #166534;">
+                                    <div style="font-weight: 700; color: #166534; margin-bottom: 5px;">EBITDA Target</div>
+                                    <div style="color: #64748b; font-size: 0.95em;">Positive L3M (Last 3 Months) EBITDA sustained</div>
+                                </div>
+                            </div>
+                            
+                            <h4 style="color: #1a3a52; margin-bottom: 15px; font-size: 1.2em;">Timeline to Phase 1</h4>
+                            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">Q4 2025 (Oct-Dec)</span>
+                                        <span style="color: #64748b; font-size: 0.9em;">Stabilization</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">Deploy critical spares, begin K-Tron installation</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-weight: 600; color: #1a3a52;">Q1 2026 (Jan-Mar)</span>
+                                        <span style="color: #64748b; font-size: 0.9em;">Production Ramp</span>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 0.9em;">Prove K-Tron fixes work, scale to 12-13K tons/month</div>
+                                </div>
+                                
+                                <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border-left: 4px solid #dc2626;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-weight: 700; color: #dc2626;">Q2 2026 (Apr-Jun)</span>
+                                        <span style="color: #dc2626; font-size: 0.9em; font-weight: 600;">DEADLINE</span>
+                                    </div>
+                                    <div style="color: #7f1d1d; font-size: 0.9em; font-weight: 600;">Hit $2.3M/month × 3 + L3M positive EBITDA by June 30, 2026</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Covenants & Thresholds -->
+                <div class="insight-card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #2563eb;">
+                    <h3 style="color: #1e40af; margin-bottom: 20px; font-size: 1.4em;">📋 KEY COVENANTS & THRESHOLDS TO MONITOR</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #dc2626;">
+                            <div style="font-weight: 700; color: #dc2626; margin-bottom: 10px; font-size: 1.1em;">Minimum Cash Covenant</div>
+                            <div style="font-size: 1.8em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">$500,000</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Per 4th Amendment with Orion:</strong> Must maintain minimum $500K unrestricted cash at all times. 
+                                Breach triggers potential FTI Consulting external monitoring.
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                            <div style="font-weight: 700; color: #b45309; margin-bottom: 10px; font-size: 1.1em;">Enhanced Info Rights Trigger</div>
+                            <div style="font-size: 1.8em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">$2,000,000</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Currently triggered:</strong> When cash drops below $2M, requires bi-weekly cash reports 
+                                + monthly 90-day liquidity forecasts. Active through Phase 1 OR Dec 31, 2026 (whichever later).
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+                            <div style="font-weight: 700; color: #0369a1; margin-bottom: 10px; font-size: 1.1em;">Current Ratio Target</div>
+                            <div style="font-size: 1.8em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">1.0x</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Liquidity health metric:</strong> Current Assets ÷ Current Liabilities should maintain 
+                                ratio of at least 1.0. Monitor quarterly to ensure short-term financial health.
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #7c3aed;">
+                            <div style="font-weight: 700; color: #6d28d9; margin-bottom: 10px; font-size: 1.1em;">Perpetual Revenue Royalty</div>
+                            <div style="font-size: 1.8em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">7.3%</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Orion royalty rate:</strong> 7.3% of gross revenue paid perpetually. 
+                                Q2 2025 payment ($613K) was waived per 4th Amendment. Monitor monthly calculation.
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #059669;">
+                            <div style="font-weight: 700; color: #047857; margin-bottom: 10px; font-size: 1.1em;">Phase 1 Revenue Target</div>
+                            <div style="font-size: 1.8em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">$2.3M/mo</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Deadline: June 30, 2026:</strong> Must achieve $2.3M monthly revenue sustained 
+                                over 3 consecutive months + L3M positive EBITDA for Phase 1 Completion.
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #64748b;">
+                            <div style="font-weight: 700; color: #475569; margin-bottom: 10px; font-size: 1.1em;">Independent Engineer</div>
+                            <div style="font-size: 1.5em; font-weight: 800; color: #1a3a52; margin-bottom: 8px;">Monthly</div>
+                            <div style="color: #64748b; font-size: 0.9em;">
+                                <strong>Required per 4th Amendment:</strong> Must engage Independent Engineer to provide 
+                                monthly reports on operational progress, compliance, and capex deployment. Target: mid-Nov 2025.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // GLOBAL STATE
+        // ==========================================
+        let uploadedARData = [];
+        let uploadedAPData = [];
+        let otherCashFlows = [];
+        let newRevenueCollections = {}; // Tracks AR collections from new revenue
+        let currentDataSource = 'default';
+
+        const COVENANT_MINIMUM = 500000;
+        const STARTING_CASH = 6200000;
+
+        // UNIFIED EXCEL WORKBOOK FILE
+        // This file should contain 3 sheets: Weekly_Forecast, AR_Paste, AP_Paste
+        const UNIFIED_WORKBOOK = '13_Week_Cashcast_Static.xlsx';
+
+        // Auto-load from local file on page load
+        // NOTE: Auto-load only works when served via HTTP (Netlify, web server, etc.)
+        // Will NOT work when opening file:// directly in browser
+        let autoLoadEnabled = true; // Enabled for Netlify deployment
+
+        // ==========================================
+        // FILE UPLOAD HANDLERS
+        // ==========================================
+        // ==========================================
+        // FILE UPLOAD HANDLERS
+        // ==========================================
+        function handleUnifiedUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array', cellDates: true});
+                    
+                    // Check for required sheets
+                    const requiredSheets = ['Weekly_Forecast', 'AR_Paste', 'AP_Paste'];
+                    const missingSheets = requiredSheets.filter(sheet => !workbook.SheetNames.includes(sheet));
+                    
+                    if (missingSheets.length > 0) {
+                        throw new Error(`Missing required sheets: ${missingSheets.join(', ')}`);
+                    }
+                    
+                    // Process Weekly_Forecast - Read from row 3 (header) with data starting row 4
+                    const forecastSheet = workbook.Sheets['Weekly_Forecast'];
+                    
+                    // Manual parsing to get exact columns
+                    const range = XLSX.utils.decode_range(forecastSheet['!ref']);
+                    const forecastData = [];
+                    
+                    // Read rows 4-16 (weeks 1-13) - Row 3 is header, data starts at row 4
+                    for (let row = 4; row <= 16; row++) {
+                        const weekData = {
+                            'Week': forecastSheet[`A${row}`] ? forecastSheet[`A${row}`].v : 0,
+                            'Week Start': forecastSheet[`B${row}`] ? forecastSheet[`B${row}`].v : null,
+                            'Week End': forecastSheet[`C${row}`] ? forecastSheet[`C${row}`].v : null,
+                            'Opening Cash': forecastSheet[`D${row}`] ? forecastSheet[`D${row}`].v : 0,
+                            'AR Receipts': forecastSheet[`E${row}`] ? forecastSheet[`E${row}`].v : 0,
+                            'New AR from Revenue': forecastSheet[`F${row}`] ? forecastSheet[`F${row}`].v : 0,
+                            'Total Inflows': forecastSheet[`G${row}`] ? forecastSheet[`G${row}`].v : 0,
+                            'Aged AP Payments': forecastSheet[`H${row}`] ? forecastSheet[`H${row}`].v : 0,
+                            'New AP Payments': forecastSheet[`I${row}`] ? forecastSheet[`I${row}`].v : 0,
+                            'Direct Costs': forecastSheet[`J${row}`] ? forecastSheet[`J${row}`].v : 0,
+                            'Capex and other': forecastSheet[`K${row}`] ? forecastSheet[`K${row}`].v : 0,
+                            'Total Outflows': forecastSheet[`L${row}`] ? forecastSheet[`L${row}`].v : 0,
+                            'Net Cashflow': forecastSheet[`M${row}`] ? forecastSheet[`M${row}`].v : 0,
+                            'Ending Cash': forecastSheet[`N${row}`] ? forecastSheet[`N${row}`].v : 0,
+                            'Min Cash': forecastSheet[`O${row}`] ? forecastSheet[`O${row}`].v : 0,
+                            'Headroom': forecastSheet[`P${row}`] ? forecastSheet[`P${row}`].v : 0,
+                            'Flag': forecastSheet[`Q${row}`] ? forecastSheet[`Q${row}`].v : ''
+                        };
+                        forecastData.push(weekData);
+                    }
+                    
+                    otherCashFlows = forecastData;
+                    console.log('Loaded forecast data:', forecastData);
+                    
+                    // Process AR_Paste
+                    const arSheet = workbook.Sheets['AR_Paste'];
+                    const arData = XLSX.utils.sheet_to_json(arSheet);
+                    uploadedARData = processARData(arData);
+                    
+                    // Process AP_Paste
+                    const apSheet = workbook.Sheets['AP_Paste'];
+                    const apData = XLSX.utils.sheet_to_json(apSheet);
+                    uploadedAPData = processAPPriorityData(apData);
+                    
+                    // Process new revenue collections
+                    processNewRevenue();
+                    
+                    currentDataSource = 'uploaded';
+                    
+                    document.getElementById('unifiedFileStatus').className = 'file-status success';
+                    document.getElementById('unifiedFileStatus').textContent = 
+                        `✓ Loaded: ${forecastData.length} forecast weeks, ${uploadedARData.length} AR records, ${uploadedAPData.length} AP records`;
+                    
+                    // Auto-process after unified upload
+                    processData();
+                    
+                } catch (error) {
+                    document.getElementById('unifiedFileStatus').className = 'file-status error';
+                    document.getElementById('unifiedFileStatus').textContent = '✗ Error: ' + error.message;
+                    console.error('Upload error:', error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleARUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    uploadedARData = processARData(jsonData);
+                    
+                    document.getElementById('arFileStatus').className = 'file-status success';
+                    document.getElementById('arFileStatus').textContent = `✓ Loaded ${uploadedARData.length} AR records`;
+                    
+                    checkProcessReady();
+                } catch (error) {
+                    document.getElementById('arFileStatus').className = 'file-status error';
+                    document.getElementById('arFileStatus').textContent = '✗ Error: ' + error.message;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleAPUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    const payablesSheet = workbook.Sheets['Payables'];
+                    if (!payablesSheet) {
+                        throw new Error('Could not find "Payables" sheet');
+                    }
+                    
+                    const payablesData = XLSX.utils.sheet_to_json(payablesSheet);
+                    uploadedAPData = processAPPriorityData(payablesData);
+                    
+                    document.getElementById('apFileStatus').className = 'file-status success';
+                    document.getElementById('apFileStatus').textContent = `✓ Loaded ${uploadedAPData.length} AP records`;
+                    
+                    checkProcessReady();
+                } catch (error) {
+                    document.getElementById('apFileStatus').className = 'file-status error';
+                    document.getElementById('apFileStatus').textContent = '✗ Error: ' + error.message;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function checkProcessReady() {
+            const hasData = uploadedARData.length > 0 || uploadedAPData.length > 0;
+            document.getElementById('processBtn').disabled = !hasData;
+        }
+
+        // ==========================================
+        // DATA PROCESSING
+        // ==========================================
+        function processARData(jsonData) {
+            return jsonData.map(row => {
+                const dueDate = excelDateToJSDate(row['Due Date'] || row['due_date']);
+                const paymentDate = excelDateToJSDate(row['Payment Date']);
+                const today = new Date();
+                const daysOut = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                // Use Week column directly from Excel, or calculate if missing
+                let assignedWeek = parseInt(row['Week']) || Math.ceil(daysOut / 7);
+                if (assignedWeek < 1) assignedWeek = 1;
+                if (assignedWeek > 13) assignedWeek = 13;
+                
+                return {
+                    entity: row['Customer'] || row['Vendor'] || row['Entity'] || '',
+                    invoice: row['Invoice Number'] || row['Invoice'] || row['Invoice #'] || '',
+                    invoice_date: excelDateToJSDate(row['Invoice Date'] || row['invoice_date']),
+                    due_date: dueDate,
+                    payment_date: paymentDate,
+                    terms: row['Terms'] || row['terms'] || '',
+                    amount: parseFloat(row['Amount'] || row['amount'] || 0),
+                    days_past_due: parseInt(row['Days Past Due'] || 0),
+                    days_out: daysOut,
+                    assigned_week: assignedWeek,
+                    aging_category: row['Aging'] || row['aging_category'] || 'Current'
+                };
+            });
+        }
+
+        function processAPPriorityData(jsonData) {
+            return jsonData.map(row => {
+                const dueDate = excelDateToJSDate(row['Due Date']);
+                const paymentDate = excelDateToJSDate(row['Payment Date']);
+                const today = new Date();
+                const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                // Use Week column directly from Excel
+                // If Week is a formula string, calculate from Payment Date
+                let assignedWeek = row['Week'];
+                if (typeof assignedWeek === 'string' && assignedWeek.startsWith('=')) {
+                    // Week is a formula, calculate from payment date
+                    const weekStart = new Date(2025, 10, 3); // Nov 3, 2025 (Week 1 start)
+                    const daysDiff = Math.floor((paymentDate - weekStart) / (1000 * 60 * 60 * 24));
+                    assignedWeek = Math.floor(daysDiff / 7) + 1;
+                }
+                assignedWeek = parseInt(assignedWeek) || 1;
+                if (assignedWeek < 1) assignedWeek = 1;
+                if (assignedWeek > 13) assignedWeek = 13;
+                
+                // Use Tier column directly from Excel
+                const tier = parseInt(row['Tier']) || 4;
+                
+                return {
+                    entity: row['Vendor'] || row['Customer'] || '',
+                    invoice: row['Invoice Number'] || row['Invoice'] || row['Invoice #'] || '',
+                    invoice_date: excelDateToJSDate(row['Invoice Date']),
+                    due_date: dueDate,
+                    payment_date: paymentDate,
+                    terms: row['Terms'] || '',
+                    amount: parseFloat(row['Amount'] || 0),
+                    days_until_due: daysUntilDue,
+                    days_past_due: parseInt(row['Days Past Due'] || 0),
+                    priority_tier: `Tier ${tier}`,
+                    tier_number: tier,
+                    assigned_week: assignedWeek,
+                    rule_assigned: row['Rule_Assigned'] || ''
+                };
+            });
+        }
+
+        function excelDateToJSDate(excelDate) {
+            if (!excelDate) return new Date();
+            if (typeof excelDate === 'string') return new Date(excelDate);
+            if (excelDate instanceof Date) return excelDate;
+            
+            const excelEpoch = new Date(1899, 11, 30);
+            return new Date(excelEpoch.getTime() + excelDate * 86400000);
+        }
+
+        // ==========================================
+        // DASHBOARD GENERATION
+        // ==========================================
+        function processNewRevenue() {
+            // Collection pattern: 50% wk+6, 20% wk+7, 10% wk+8, 5% wk+9, 5% wk+10, 5% wk+11, 5% wk+12
+            const collectionPattern = {6: 0.50, 7: 0.20, 8: 0.10, 9: 0.05, 10: 0.05, 11: 0.05, 12: 0.05};
+            newRevenueCollections = {};
+
+            otherCashFlows.forEach((cf, index) => {
+                const week = cf['Week #'] || cf['Week'];
+                const totalRevenue = cf['New AR from Revenue'] || 0;
+                const cashPortion = totalRevenue * 0.20; // 20% cash immediately
+                const arPortion = totalRevenue * 0.80; // 80% becomes AR
+
+                // Initialize week collections
+                if (!newRevenueCollections[week]) {
+                    newRevenueCollections[week] = {cash: 0, arCollections: 0};
+                }
+                newRevenueCollections[week].cash += cashPortion;
+
+                // Distribute AR collections over future weeks
+                for (const [offset, percentage] of Object.entries(collectionPattern)) {
+                    const collectionWeek = week + parseInt(offset);
+                    if (collectionWeek <= 13) {
+                        if (!newRevenueCollections[collectionWeek]) {
+                            newRevenueCollections[collectionWeek] = {cash: 0, arCollections: 0};
+                        }
+                        newRevenueCollections[collectionWeek].arCollections += arPortion * percentage;
+                    }
+                }
+            });
+        }
+
+        function processData() {
+            currentDataSource = 'real';
+
+            document.getElementById('dataSourceIndicator').className = 'data-source-indicator real-data';
+            document.getElementById('dataSourceIndicator').textContent = '✓ Showing Your Actual Data';
+
+            updateMetrics();
+            generateInsights();
+            generateCashFlowTable();
+            generatePaymentSchedule();
+            generateCollectionSchedule();
+            updateCharts();
+        }
+
+        function updateMetrics() {
+            // Get ending cash from Week 13 in Excel
+            const week13 = otherCashFlows.find(cf => cf['Week'] === 13);
+            const endingCash = week13 ? week13['Ending Cash'] : 0;
+            
+            // Get opening cash from Week 1 (this is current cash)
+            const week1 = otherCashFlows.find(cf => cf['Week'] === 1);
+            const currentCash = week1 ? week1['Opening Cash'] : 0;
+            
+            // Calculate total inflows and outflows from Excel
+            let totalInflows = 0;
+            let totalOutflows = 0;
+            let minCash = currentCash;
+            let minCashWeek = 0;
+            
+            console.log('=== Calculating totals from Excel ===');
+            for (let week = 1; week <= 13; week++) {
+                const cfWeek = otherCashFlows.find(cf => cf['Week'] === week);
+                if (cfWeek) {
+                    const weekInflows = cfWeek['Total Inflows'] || 0;
+                    const weekOutflows = cfWeek['Total Outflows'] || 0;
+                    
+                    totalInflows += weekInflows;
+                    totalOutflows += Math.abs(weekOutflows);
+                    
+                    console.log(`Week ${week}: Inflows=${weekInflows}, Outflows=${weekOutflows}, Running Total Out=${totalOutflows}`);
+                    
+                    const weekEndingCash = cfWeek['Ending Cash'] || 0;
+                    if (weekEndingCash < minCash) {
+                        minCash = weekEndingCash;
+                        minCashWeek = week;
+                    }
+                }
+            }
+            console.log(`Final: totalInflows=${totalInflows}, totalOutflows=${totalOutflows}`);
+            
+            // Net cash flow from Excel
+            const netCash = endingCash - currentCash;
+            
+            // Update metric displays
+            document.getElementById('totalInflows').textContent = formatCurrency(totalInflows);
+            document.getElementById('totalOutflows').textContent = formatCurrency(totalOutflows);
+            
+            const netCard = document.getElementById('netCashCard');
+            const netValue = document.getElementById('netCashFlow');
+            netValue.textContent = formatCurrency(netCash);
+            
+            netCard.classList.remove('positive', 'negative');
+            netValue.classList.remove('positive', 'negative');
+            if (netCash > 0) {
+                netCard.classList.add('positive');
+                netValue.classList.add('positive');
+            } else if (netCash < 0) {
+                netCard.classList.add('negative');
+                netValue.classList.add('negative');
+            }
+            
+            // Display cash positions
+            document.getElementById('currentCash').textContent = formatCurrency(currentCash);
+            document.getElementById('minCash').textContent = formatCurrency(minCash);
+            document.getElementById('minCashWeek').textContent = `Week ${minCashWeek} (Lowest point)`;
+            document.getElementById('endingCash').textContent = formatCurrency(endingCash);
+            document.getElementById('covenantBuffer').textContent = formatCurrency(endingCash - COVENANT_MINIMUM) + ' above covenant';
+
+            updateCovenantWidgets(minCash, minCashWeek, endingCash, currentCash);
+        }
+
+        function updateCovenantWidgets(minCash, minCashWeek, endCash, currentCash) {
+            const minBuffer = minCash - COVENANT_MINIMUM;
+            const endBuffer = endCash - COVENANT_MINIMUM;
+            
+            // MIN CASH WIDGET
+            const minWidget = document.getElementById('minCashWidget');
+            const minStatus = document.getElementById('minCashStatus');
+            const minValue = document.getElementById('minCashValue');
+            
+            minValue.textContent = formatCurrency(minCash);
+            minWidget.className = 'covenant-widget';
+            minStatus.className = 'covenant-status';
+            
+            if (minBuffer > 1000000) {
+                minStatus.classList.add('safe');
+                minStatus.innerHTML = `✓ SAFE<br><small>Week ${minCashWeek}</small>`;
+            } else if (minBuffer > 500000) {
+                minWidget.classList.add('warning');
+                minStatus.classList.add('warning');
+                minStatus.innerHTML = `⚠ CAUTION<br><small>Week ${minCashWeek}</small>`;
+            } else {
+                minWidget.classList.add('danger');
+                minStatus.classList.add('danger');
+                minStatus.innerHTML = `🚨 DANGER<br><small>Week ${minCashWeek}</small>`;
+            }
+            
+            // END CASH WIDGET
+            const endWidget = document.getElementById('endCashWidget');
+            const endStatus = document.getElementById('endCashStatus');
+            const endValue = document.getElementById('endCashValue');
+            
+            endValue.textContent = formatCurrency(endCash);
+            endWidget.className = 'covenant-widget';
+            endStatus.className = 'covenant-status';
+            
+            if (endBuffer > 1000000) {
+                endStatus.classList.add('safe');
+                endStatus.innerHTML = `Week 13<br><small>${formatCurrency(endBuffer)} buffer</small>`;
+            } else if (endBuffer > 500000) {
+                endWidget.classList.add('warning');
+                endStatus.classList.add('warning');
+                endStatus.innerHTML = `Week 13<br><small>${formatCurrency(endBuffer)} buffer</small>`;
+            } else {
+                endWidget.classList.add('danger');
+                endStatus.classList.add('danger');
+                endStatus.innerHTML = `Week 13<br><small>${formatCurrency(endBuffer)} buffer</small>`;
+            }
+        }
+
+        function generateInsights() {
+            const insights = [];
+            
+            // Calculate key metrics from Excel data
+            let minCash = Infinity;
+            let minWeek = 0;
+            let negativeWeeks = 0;
+            let heaviestWeek = { week: 0, amount: 0 };
+            let totalNetFlow = 0;
+            
+            for (let week = 1; week <= 13; week++) {
+                const cfWeek = otherCashFlows.find(cf => cf['Week'] === week);
+                if (cfWeek) {
+                    // Track minimum cash
+                    const endingCash = cfWeek['Ending Cash'] || 0;
+                    if (endingCash < minCash) {
+                        minCash = endingCash;
+                        minWeek = week;
+                    }
+                    
+                    // Count negative net flow weeks
+                    const netFlow = cfWeek['Net Cashflow'] || 0;
+                    if (netFlow < 0) negativeWeeks++;
+                    totalNetFlow += netFlow;
+                    
+                    // Track week with highest outflows
+                    const weekOutflows = Math.abs(cfWeek['Total Outflows'] || 0);
+                    if (weekOutflows > heaviestWeek.amount) {
+                        heaviestWeek = { week: week, amount: weekOutflows };
+                    }
+                }
+            }
+            
+            // Generate insights
+            if (minWeek > 0) {
+                insights.push(`Lowest cash position occurs in Week ${minWeek} at ${formatCurrency(minCash)}`);
+            }
+            
+            if (negativeWeeks > 0) {
+                insights.push(`${negativeWeeks} weeks show negative net cash flow (outflows exceed inflows)`);
+            }
+            
+            if (heaviestWeek.week > 0) {
+                insights.push(`Week ${heaviestWeek.week} has highest outflow at ${formatCurrency(heaviestWeek.amount)}`);
+            }
+            
+            if (totalNetFlow > 0) {
+                insights.push(`Net positive cash flow of ${formatCurrency(totalNetFlow)} over 13-week period`);
+            } else {
+                insights.push(`Net cash burn of ${formatCurrency(Math.abs(totalNetFlow))} over 13-week period`);
+            }
+            
+            // Display insights
+            if (insights.length > 0) {
+                const insightsList = document.getElementById('insightsList');
+                insightsList.innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+                document.getElementById('insightsBox').style.display = 'block';
+            }
+        }
+
+        function generateCashFlowTable() {
+            let runningCash = STARTING_CASH;
+
+            let html = '<table class="cash-flow-table"><thead><tr>';
+            html += '<th>Week</th><th>AR Receipts</th><th>New AR from Revenue</th><th>Total Inflows</th><th>Aged AP Payments</th><th>New AP Payments</th><th>Direct Costs</th><th>Capex and other</th><th>Total Outflows</th>';
+            html += '<th>Net Cashflow</th><th>Ending Cash</th></tr></thead><tbody>';
+
+            // Totals tracking
+            let totalARReceipts = 0, totalNewARRevenue = 0, totalInflows = 0, totalAgedAP = 0, totalNewAP = 0, totalDirectCosts = 0, totalCapexOther = 0, totalOutflows = 0;
+            let totalNetFlow = 0;
+
+            for (let week = 1; week <= 13; week++) {
+                const weekAR = uploadedARData
+                    .filter(inv => inv.assigned_week === week)
+                    .reduce((sum, inv) => sum + inv.amount, 0);
+
+                const weekAP = uploadedAPData
+                    .filter(inv => inv.assigned_week === week)
+                    .reduce((sum, inv) => sum + inv.amount, 0);
+
+                // Get other cash flows for this week from Weekly_Forecast
+                // Note: The header is "Week #" not "Week"
+                const cfWeek = otherCashFlows.find(cf => cf['Week'] === week) || {};
+                const arReceipts = cfWeek['AR Receipts'] || 0;  // AR Receipts from Excel
+                const newARRevenue = cfWeek['New AR from Revenue'] || 0;  // New AR from Revenue
+                const totalInflowsCalc = cfWeek['Total Inflows'] || 0;  // Total Inflows from Excel
+                const agedAPPayments = cfWeek['Aged AP Payments'] || weekAP;  // From Excel or uploaded AP file
+                const newAPPayments = cfWeek['New AP Payments'] || 0;
+                const directCosts = cfWeek['Direct Costs'] || 0;
+                const capexOther = cfWeek['Capex and other'] || 0;
+                const totalOutflowsCalc = cfWeek['Total Outflows'] || 0;  // Total Outflows from Excel
+                const netCashflow = cfWeek['Net Cashflow'] || 0;  // Net Cashflow from Excel
+                const endingCashCalc = cfWeek['Ending Cash'] || 0;  // Ending Cash from Excel
+
+                // Use the calculated values from Excel
+                runningCash = endingCashCalc;
+
+                // Add to totals
+                totalARReceipts += arReceipts;
+                totalNewARRevenue += newARRevenue;
+                totalInflows += totalInflowsCalc;
+                totalAgedAP += agedAPPayments;
+                totalNewAP += newAPPayments;
+                totalDirectCosts += directCosts;
+                totalCapexOther += capexOther;
+                totalOutflows += totalOutflowsCalc;
+                totalNetFlow += netCashflow;
+
+                let rowClass = '';
+                const buffer = runningCash - COVENANT_MINIMUM;
+                if (buffer < 500000) rowClass = 'danger';
+                else if (buffer < 1000000) rowClass = 'warning';
+
+                const netClass = netCashflow >= 0 ? 'net-positive' : 'net-negative';
+
+                html += `<tr class="${rowClass}" data-week="${week}">`;
+                html += `<td data-label="Week"><strong>Week ${week}</strong></td>`;
+                html += `<td data-label="AR Receipts" class="net-positive">${formatCurrency(arReceipts)}</td>`;
+                html += `<td data-label="New AR" class="net-positive">${formatCurrency(newARRevenue)}</td>`;
+                html += `<td data-label="Total In" class="net-positive">${formatCurrency(totalInflowsCalc)}</td>`;
+                html += `<td data-label="Aged AP" class="net-negative">${formatCurrency(agedAPPayments)}</td>`;
+                html += `<td data-label="New AP" class="net-negative">${formatCurrency(newAPPayments)}</td>`;
+                html += `<td data-label="Direct Costs" class="net-negative">${formatCurrency(directCosts)}</td>`;
+                html += `<td data-label="Capex/Other" class="net-negative">${formatCurrency(capexOther)}</td>`;
+                html += `<td data-label="Total Out" class="net-negative">${formatCurrency(totalOutflowsCalc)}</td>`;
+                html += `<td data-label="Net Flow" class="${netClass}"><strong>${formatCurrency(netCashflow)}</strong></td>`;
+                html += `<td data-label="End Cash"><strong>${formatCurrency(runningCash)}</strong></td>`;
+                html += '</tr>';
+            }
+
+            // Total row
+            const totalNetClass = totalNetFlow >= 0 ? 'net-positive' : 'net-negative';
+            html += '<tr style="background: #e2e8f0; font-weight: 700; border-top: 3px solid #2d5a7b;" class="total-row">';
+            html += '<td data-label="Week"><strong>TOTAL</strong></td>';
+            html += `<td data-label="AR Receipts" class="net-positive"><strong>${formatCurrency(totalARReceipts)}</strong></td>`;
+            html += `<td data-label="New AR" class="net-positive"><strong>${formatCurrency(totalNewARRevenue)}</strong></td>`;
+            html += `<td data-label="Total In" class="net-positive"><strong>${formatCurrency(totalInflows)}</strong></td>`;
+            html += `<td data-label="Aged AP" class="net-negative"><strong>${formatCurrency(totalAgedAP)}</strong></td>`;
+            html += `<td data-label="New AP" class="net-negative"><strong>${formatCurrency(totalNewAP)}</strong></td>`;
+            html += `<td data-label="Direct Costs" class="net-negative"><strong>${formatCurrency(totalDirectCosts)}</strong></td>`;
+            html += `<td data-label="Capex/Other" class="net-negative"><strong>${formatCurrency(totalCapexOther)}</strong></td>`;
+            html += `<td data-label="Total Out" class="net-negative"><strong>${formatCurrency(totalOutflows)}</strong></td>`;
+            html += `<td data-label="Net Flow" class="${totalNetClass}"><strong>${formatCurrency(totalNetFlow)}</strong></td>`;
+            html += '<td data-label="End Cash">-</td>';
+            html += '</tr>';
+
+            html += '</tbody></table>';
+            document.getElementById('cashFlowTableContainer').innerHTML = html;
+        }
+
+        function generatePaymentSchedule(filterVendor = '') {
+            // Populate vendor dropdown
+            const vendors = [...new Set(uploadedAPData.map(inv => inv.entity))].sort();
+            const vendorSelect = document.getElementById('vendorFilter');
+            vendorSelect.innerHTML = '<option value="">All Vendors</option>';
+            vendors.forEach(vendor => {
+                vendorSelect.innerHTML += `<option value="${vendor}">${vendor}</option>`;
+            });
+            if (filterVendor) vendorSelect.value = filterVendor;
+
+            // Filter data
+            const filteredData = filterVendor ? uploadedAPData.filter(inv => inv.entity === filterVendor) : uploadedAPData;
+            const totalAmount = filteredData.reduce((sum, inv) => sum + inv.amount, 0);
+            document.getElementById('vendorTotal').textContent = filterVendor ? `Total: ${formatCurrency(totalAmount)}` : '';
+
+            let html = '';
+
+            for (let week = 1; week <= 13; week++) {
+                const weekInvoices = filteredData.filter(inv => inv.assigned_week === week);
+                if (weekInvoices.length === 0) continue;
+
+                const weekTotal = weekInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+
+                html += `<div class="week-group" onclick="toggleWeek(${week})">`;
+                html += `<div class="week-header">`;
+                html += `<div class="week-header-left">`;
+                html += `<div class="week-number">Week ${week}</div>`;
+                html += `<div class="week-summary">${weekInvoices.length} invoices</div>`;
+                html += `</div>`;
+                html += `<div class="week-header-left">`;
+                html += `<div class="week-total">${formatCurrency(weekTotal)}</div>`;
+                html += `<div class="expand-icon">▼</div>`;
+                html += `</div>`;
+                html += `</div>`;
+
+                html += `<div class="week-details">`;
+                html += `<table><thead><tr><th>Vendor</th><th>Invoice</th><th>Amount</th><th>Due Date</th><th>Priority</th><th>Days Past Due</th></tr></thead><tbody>`;
+
+                weekInvoices.forEach(inv => {
+                    html += `<tr>`;
+                    html += `<td>${inv.entity}</td>`;
+                    html += `<td>${inv.invoice}</td>`;
+                    html += `<td><strong>${formatCurrency(inv.amount)}</strong></td>`;
+                    html += `<td>${formatDate(inv.due_date)}</td>`;
+                    html += `<td><span class="priority-badge priority-tier-${inv.tier_number}">${inv.priority_tier}</span></td>`;
+                    html += `<td>${inv.days_past_due > 0 ? inv.days_past_due + ' days' : '-'}</td>`;
+                    html += `</tr>`;
+                });
+
+                html += `</tbody></table></div></div>`;
+            }
+
+            document.getElementById('paymentScheduleContainer').innerHTML = html || '<p style="text-align: center; color: #64748b; padding: 40px;">No AP data for 13-week period</p>';
+        }
+
+        function filterVendor() {
+            const vendor = document.getElementById('vendorFilter').value;
+            generatePaymentSchedule(vendor);
+        }
+
+        function generateCollectionSchedule(filterCustomer = '') {
+            // Populate customer dropdown
+            const customers = [...new Set(uploadedARData.map(inv => inv.entity))].sort();
+            const customerSelect = document.getElementById('customerFilter');
+            customerSelect.innerHTML = '<option value="">All Customers</option>';
+            customers.forEach(customer => {
+                customerSelect.innerHTML += `<option value="${customer}">${customer}</option>`;
+            });
+            if (filterCustomer) customerSelect.value = filterCustomer;
+
+            // Filter data
+            const filteredData = filterCustomer ? uploadedARData.filter(inv => inv.entity === filterCustomer) : uploadedARData;
+            const totalAmount = filteredData.reduce((sum, inv) => sum + inv.amount, 0);
+            document.getElementById('customerTotal').textContent = filterCustomer ? `Total: ${formatCurrency(totalAmount)}` : '';
+
+            let html = '';
+
+            for (let week = 1; week <= 13; week++) {
+                const weekInvoices = filteredData.filter(inv => inv.assigned_week === week);
+                if (weekInvoices.length === 0) continue;
+
+                const weekTotal = weekInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+
+                html += `<div class="week-group" onclick="toggleARWeek(${week})">`;
+                html += `<div class="week-header ar-header">`;
+                html += `<div class="week-header-left">`;
+                html += `<div class="week-number">Week ${week}</div>`;
+                html += `<div class="week-summary">${weekInvoices.length} invoices</div>`;
+                html += `</div>`;
+                html += `<div class="week-header-left">`;
+                html += `<div class="week-total">${formatCurrency(weekTotal)}</div>`;
+                html += `<div class="expand-icon">▼</div>`;
+                html += `</div>`;
+                html += `</div>`;
+
+                html += `<div class="week-details">`;
+                html += `<table><thead><tr><th>Customer</th><th>Invoice</th><th>Amount</th><th>Due Date</th><th>Terms</th><th>Days Out</th></tr></thead><tbody>`;
+
+                weekInvoices.forEach(inv => {
+                    html += `<tr>`;
+                    html += `<td>${inv.entity}</td>`;
+                    html += `<td>${inv.invoice}</td>`;
+                    html += `<td><strong>${formatCurrency(inv.amount)}</strong></td>`;
+                    html += `<td>${formatDate(inv.due_date)}</td>`;
+                    html += `<td>${inv.terms}</td>`;
+                    html += `<td>${inv.days_out} days</td>`;
+                    html += `</tr>`;
+                });
+
+                html += `</tbody></table></div></div>`;
+            }
+
+            document.getElementById('collectionScheduleContainer').innerHTML = html || '<p style="text-align: center; color: #64748b; padding: 40px;">No AR data for 13-week period</p>';
+        }
+
+        function filterCustomer() {
+            const customer = document.getElementById('customerFilter').value;
+            generateCollectionSchedule(customer);
+        }
+
+        function toggleWeek(week) {
+            event.stopPropagation();
+            const weekGroups = document.querySelectorAll('#paymentScheduleContainer .week-group');
+            const targetIndex = Array.from(weekGroups).findIndex(group => {
+                return group.textContent.includes(`Week ${week}`) && 
+                       group.textContent.indexOf(`Week ${week}`) === group.textContent.indexOf('Week');
+            });
+            if (targetIndex >= 0) {
+                weekGroups[targetIndex].classList.toggle('expanded');
+            }
+        }
+
+        function toggleARWeek(week) {
+            event.stopPropagation();
+            const weekGroups = document.querySelectorAll('#collectionScheduleContainer .week-group');
+            const targetIndex = Array.from(weekGroups).findIndex(group => {
+                return group.textContent.includes(`Week ${week}`) && 
+                       group.textContent.indexOf(`Week ${week}`) === group.textContent.indexOf('Week');
+            });
+            if (targetIndex >= 0) {
+                weekGroups[targetIndex].classList.toggle('expanded');
+            }
+        }
+
+        // ==========================================
+        // CHARTS
+        // ==========================================
+        let netFlowChart, cumulativeChart;
+
+        function updateCharts() {
+            createNetFlowChart();
+            createCumulativeCashChart();
+        }
+
+        function createNetFlowChart() {
+            const ctx = document.getElementById('weeklyNetFlowChart').getContext('2d');
+            
+            const inflows = [];
+            const outflows = [];
+            
+            for (let week = 1; week <= 13; week++) {
+                // Get values directly from Weekly_Forecast Excel
+                const cfWeek = otherCashFlows.find(cf => cf['Week'] === week) || {};
+                const totalInflows = cfWeek['Total Inflows'] || 0;
+                const totalOutflows = cfWeek['Total Outflows'] || 0;
+                
+                inflows.push(totalInflows);
+                outflows.push(-Math.abs(totalOutflows)); // Make negative for chart display
+            }
+            
+            if (netFlowChart) netFlowChart.destroy();
+            
+            netFlowChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 13}, (_, i) => `W${i + 1}`),
+                    datasets: [
+                        {
+                            label: 'Total Inflows',
+                            data: inflows,
+                            backgroundColor: '#14b8a6',
+                            borderColor: '#0f766e',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Total Outflows',
+                            data: outflows,
+                            backgroundColor: '#ef4444',
+                            borderColor: '#b91c1c',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => '$' + (value / 1000).toFixed(0) + 'k'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: context => formatCurrency(Math.abs(context.parsed.y))
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCumulativeCashChart() {
+            const ctx = document.getElementById('cumulativeCashChart').getContext('2d');
+            
+            const cashProjection = [];
+            
+            // Get opening cash from Week 1
+            const week1 = otherCashFlows.find(cf => cf['Week'] === 1) || {};
+            const openingCash = week1['Opening Cash'] || STARTING_CASH;
+            cashProjection.push(openingCash);
+            
+            // Get ending cash for each week from Excel
+            for (let week = 1; week <= 13; week++) {
+                const cfWeek = otherCashFlows.find(cf => cf['Week'] === week) || {};
+                const endingCash = cfWeek['Ending Cash'] || 0;
+                cashProjection.push(endingCash);
+            }
+            
+            if (cumulativeChart) cumulativeChart.destroy();
+            
+            cumulativeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Start', ...Array.from({length: 13}, (_, i) => `W${i + 1}`)],
+                    datasets: [
+                        {
+                            label: 'Projected Cash',
+                            data: cashProjection,
+                            borderColor: '#2d5a7b',
+                            backgroundColor: 'rgba(45, 90, 123, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Covenant Minimum ($500k)',
+                            data: Array(14).fill(COVENANT_MINIMUM),
+                            borderColor: '#b91c1c',
+                            borderWidth: 2,
+                            borderDash: [8, 4],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => '$' + (value / 1000000).toFixed(1) + 'M'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: context => formatCurrency(context.parsed.y)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // EXPORT FUNCTIONS
+        // ==========================================
+        function exportToExcel() {
+            if (otherCashFlows.length === 0) {
+                alert('Please upload your Excel workbook first');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            // Cash Flow Summary Sheet - from Excel data
+            const cashFlowData = [
+                ['Week', 'Week Start', 'Week End', 'Opening Cash', 'AR Receipts', 'New AR from Revenue', 'Total Inflows', 
+                 'Aged AP Payments', 'New AP Payments', 'Direct Costs', 'Capex and other', 'Total Outflows', 
+                 'Net Cashflow', 'Ending Cash', 'Min Cash', 'Headroom']
+            ];
+            
+            otherCashFlows.forEach(week => {
+                cashFlowData.push([
+                    week['Week'] || '',
+                    week['Week Start'] ? new Date(week['Week Start']) : '',
+                    week['Week End'] ? new Date(week['Week End']) : '',
+                    week['Opening Cash'] || 0,
+                    week['AR Receipts'] || 0,
+                    week['New AR from Revenue'] || 0,
+                    week['Total Inflows'] || 0,
+                    week['Aged AP Payments'] || 0,
+                    week['New AP Payments'] || 0,
+                    week['Direct Costs'] || 0,
+                    week['Capex and other'] || 0,
+                    week['Total Outflows'] || 0,
+                    week['Net Cashflow'] || 0,
+                    week['Ending Cash'] || 0,
+                    week['Min Cash'] || 0,
+                    week['Headroom'] || 0
+                ]);
+            });
+            
+            const wsCashFlow = XLSX.utils.aoa_to_sheet(cashFlowData);
+            
+            // Format currency columns
+            const currencyCols = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+            for (let row = 2; row <= cashFlowData.length; row++) {
+                currencyCols.forEach(col => {
+                    const cellRef = col + row;
+                    if (wsCashFlow[cellRef]) {
+                        wsCashFlow[cellRef].z = '$#,##0';
+                    }
+                });
+            }
+            
+            XLSX.utils.book_append_sheet(wb, wsCashFlow, 'Cash Flow Forecast');
+            
+            // AR Schedule Sheet
+            if (uploadedARData.length > 0) {
+                const arData = [['Customer', 'Invoice', 'Amount', 'Due Date', 'Payment Date', 'Terms', 'Days Past Due', 'Week']];
+                uploadedARData.forEach(inv => {
+                    arData.push([
+                        inv.entity,
+                        inv.invoice,
+                        inv.amount,
+                        inv.due_date,
+                        inv.payment_date,
+                        inv.terms,
+                        inv.days_past_due,
+                        inv.assigned_week
+                    ]);
+                });
+                const wsAR = XLSX.utils.aoa_to_sheet(arData);
+                XLSX.utils.book_append_sheet(wb, wsAR, 'AR Schedule');
+            }
+            
+            // AP Schedule Sheet
+            if (uploadedAPData.length > 0) {
+                const apData = [['Vendor', 'Invoice', 'Amount', 'Due Date', 'Payment Date', 'Terms', 'Days Past Due', 'Tier', 'Week']];
+                uploadedAPData.forEach(inv => {
+                    apData.push([
+                        inv.entity,
+                        inv.invoice,
+                        inv.amount,
+                        inv.due_date,
+                        inv.payment_date,
+                        inv.terms,
+                        inv.days_past_due,
+                        inv.priority_tier,
+                        inv.assigned_week
+                    ]);
+                });
+                const wsAP = XLSX.utils.aoa_to_sheet(apData);
+                XLSX.utils.book_append_sheet(wb, wsAP, 'AP Schedule');
+            }
+            
+            // Summary Metrics Sheet
+            const week1 = otherCashFlows.find(cf => cf['Week'] === 1);
+            const week13 = otherCashFlows.find(cf => cf['Week'] === 13);
+            
+            let totalInflows = 0;
+            let totalOutflows = 0;
+            let minCash = week1 ? week1['Opening Cash'] : 0;
+            let minWeek = 0;
+            
+            otherCashFlows.forEach(week => {
+                totalInflows += week['Total Inflows'] || 0;
+                totalOutflows += Math.abs(week['Total Outflows'] || 0);
+                const endingCash = week['Ending Cash'] || 0;
+                if (endingCash < minCash) {
+                    minCash = endingCash;
+                    minWeek = week['Week'];
+                }
+            });
+            
+            const summaryData = [
+                ['Metric', 'Value'],
+                ['Current Cash Position', week1 ? week1['Opening Cash'] : 0],
+                ['Projected Minimum Cash', minCash],
+                ['Minimum Cash Week', minWeek],
+                ['Projected End Cash (Week 13)', week13 ? week13['Ending Cash'] : 0],
+                ['13-Week Total Inflows', totalInflows],
+                ['13-Week Total Outflows', totalOutflows],
+                ['Net Cash Flow', (week13 ? week13['Ending Cash'] : 0) - (week1 ? week1['Opening Cash'] : 0)],
+                ['Covenant Minimum', COVENANT_MINIMUM],
+                ['Ending Buffer Above Covenant', (week13 ? week13['Ending Cash'] : 0) - COVENANT_MINIMUM],
+                ['', ''],
+                ['Export Date', new Date().toLocaleString()],
+                ['Data Source', 'INCOA Cash Management System']
+            ];
+            
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+            
+            // Save file
+            XLSX.writeFile(wb, `INCOA_Cash_Forecast_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function printDashboard() {
+            window.print();
+        }
+
+        // ==========================================
+        // UTILITIES
+        // ==========================================
+        function formatCurrency(amount) {
+            return '$' + Math.round(amount).toLocaleString('en-US');
+        }
+
+        function formatDate(date) {
+            if (!(date instanceof Date)) return '-';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function resetToDefault() {
+            uploadedARData = [];
+            uploadedAPData = [];
+            currentDataSource = 'default';
+            
+            document.getElementById('arFileInput').value = '';
+            document.getElementById('apFileInput').value = '';
+            
+            document.getElementById('arFileStatus').className = 'file-status';
+            document.getElementById('arFileStatus').textContent = '';
+            document.getElementById('apFileStatus').className = 'file-status';
+            document.getElementById('apFileStatus').textContent = '';
+            
+            document.getElementById('processBtn').disabled = true;
+            
+            document.getElementById('dataSourceIndicator').className = 'data-source-indicator';
+            document.getElementById('dataSourceIndicator').textContent = '📊 Upload AR & AP files to generate cash flow projection';
+            
+            document.getElementById('insightsBox').style.display = 'none';
+            
+            if (netFlowChart) netFlowChart.destroy();
+            if (cumulativeChart) cumulativeChart.destroy();
+        }
+
+        // ==========================================
+        // LOCAL EXCEL LOADING
+        // ==========================================
+        async function loadFromLocalFiles() {
+            try {
+                console.log('🔍 Starting auto-load...');
+                console.log('📁 Looking for file:', UNIFIED_WORKBOOK);
+                
+                document.getElementById('dataSourceIndicator').className = 'data-source-indicator';
+                document.getElementById('dataSourceIndicator').textContent = '⏳ Loading data from ' + UNIFIED_WORKBOOK + '...';
+
+                // Load unified workbook
+                const response = await fetch(UNIFIED_WORKBOOK);
+                console.log('📡 Fetch response:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`Could not load ${UNIFIED_WORKBOOK} (HTTP ${response.status}). Make sure the file is in the same folder as index.html`);
+                }
+                
+                console.log('✓ File fetched successfully');
+                
+                const arrayBuffer = await response.arrayBuffer();
+                console.log('✓ ArrayBuffer loaded, size:', arrayBuffer.byteLength);
+                
+                const workbook = XLSX.read(arrayBuffer, {type: 'array', cellDates: true});
+                console.log('✓ Workbook parsed, sheets:', workbook.SheetNames);
+                
+                // Check for required sheets
+                const requiredSheets = ['Weekly_Forecast', 'AR_Paste', 'AP_Paste'];
+                const missingSheets = requiredSheets.filter(sheet => !workbook.SheetNames.includes(sheet));
+                
+                if (missingSheets.length > 0) {
+                    throw new Error(`Missing required sheets: ${missingSheets.join(', ')}. Found sheets: ${workbook.SheetNames.join(', ')}`);
+                }
+                
+                console.log('✓ All required sheets found');
+                
+                // Process Weekly_Forecast - Read from rows 4-16 (weeks 1-13)
+                const forecastSheet = workbook.Sheets['Weekly_Forecast'];
+                const forecastData = [];
+                
+                for (let row = 4; row <= 16; row++) {
+                    const weekData = {
+                        'Week': forecastSheet[`A${row}`] ? forecastSheet[`A${row}`].v : 0,
+                        'Week Start': forecastSheet[`B${row}`] ? forecastSheet[`B${row}`].v : null,
+                        'Week End': forecastSheet[`C${row}`] ? forecastSheet[`C${row}`].v : null,
+                        'Opening Cash': forecastSheet[`D${row}`] ? forecastSheet[`D${row}`].v : 0,
+                        'AR Receipts': forecastSheet[`E${row}`] ? forecastSheet[`E${row}`].v : 0,
+                        'New AR from Revenue': forecastSheet[`F${row}`] ? forecastSheet[`F${row}`].v : 0,
+                        'Total Inflows': forecastSheet[`G${row}`] ? forecastSheet[`G${row}`].v : 0,
+                        'Aged AP Payments': forecastSheet[`H${row}`] ? forecastSheet[`H${row}`].v : 0,
+                        'New AP Payments': forecastSheet[`I${row}`] ? forecastSheet[`I${row}`].v : 0,
+                        'Direct Costs': forecastSheet[`J${row}`] ? forecastSheet[`J${row}`].v : 0,
+                        'Capex and other': forecastSheet[`K${row}`] ? forecastSheet[`K${row}`].v : 0,
+                        'Total Outflows': forecastSheet[`L${row}`] ? forecastSheet[`L${row}`].v : 0,
+                        'Net Cashflow': forecastSheet[`M${row}`] ? forecastSheet[`M${row}`].v : 0,
+                        'Ending Cash': forecastSheet[`N${row}`] ? forecastSheet[`N${row}`].v : 0,
+                        'Min Cash': forecastSheet[`O${row}`] ? forecastSheet[`O${row}`].v : 0,
+                        'Headroom': forecastSheet[`P${row}`] ? forecastSheet[`P${row}`].v : 0,
+                        'Flag': forecastSheet[`Q${row}`] ? forecastSheet[`Q${row}`].v : ''
+                    };
+                    forecastData.push(weekData);
+                }
+                
+                otherCashFlows = forecastData;
+                console.log('✓ Loaded forecast data:', forecastData.length, 'weeks');
+                
+                // Process AR_Paste
+                const arSheet = workbook.Sheets['AR_Paste'];
+                const arData = XLSX.utils.sheet_to_json(arSheet);
+                uploadedARData = processARData(arData);
+                console.log('✓ Loaded AR data:', uploadedARData.length, 'records');
+                
+                // Process AP_Paste
+                const apSheet = workbook.Sheets['AP_Paste'];
+                const apData = XLSX.utils.sheet_to_json(apSheet);
+                uploadedAPData = processAPPriorityData(apData);
+                console.log('✓ Loaded AP data:', uploadedAPData.length, 'records');
+                
+                // Process new revenue collections
+                processNewRevenue();
+
+                currentDataSource = 'real';
+                document.getElementById('dataSourceIndicator').className = 'data-source-indicator real-data';
+                document.getElementById('dataSourceIndicator').textContent = '✓ Loaded data from ' + UNIFIED_WORKBOOK;
+
+                // Generate all views
+                updateMetrics();
+                generateInsights();
+                generateCashFlowTable();
+                generatePaymentSchedule();
+                generateCollectionSchedule();
+                updateCharts();
+                
+                console.log('✅ Dashboard initialized successfully');
+            } catch (error) {
+                console.error('❌ Auto-load error:', error);
+                console.error('Error details:', error.message);
+                document.getElementById('dataSourceIndicator').className = 'data-source-indicator';
+                document.getElementById('dataSourceIndicator').textContent = '⚠️ Could not auto-load data. Click "Upload Excel" to load your file.';
+            }
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✓ INCOA Cash Management System ready');
+
+            // Auto-load from local files if configured
+            if (autoLoadEnabled) {
+                loadFromLocalFiles();
+            }
+        });
+        
+        // Responsive chart handling - redraw on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (netFlowChart) netFlowChart.resize();
+                if (cumulativeChart) cumulativeChart.resize();
+            }, 250);
+        });
+    </script>
+</body>
+</html>
